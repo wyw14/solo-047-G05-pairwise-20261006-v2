@@ -19,6 +19,7 @@ import (
 	"github.com/wyw14/cry-103/internal/switchover"
 	"github.com/wyw14/cry-103/internal/telemetry"
 	"github.com/wyw14/cry-103/internal/topology"
+	"github.com/wyw14/cry-103/internal/window"
 )
 
 func buildServices(cfg config) (*api.Services, error) {
@@ -112,6 +113,8 @@ func buildServices(cfg config) (*api.Services, error) {
 	actuator := feed.NewActuator()
 	ramps := repeater.NewRampController(actuator, telemetryRepository, telemetry.StabilityWindow{MinimumSamples: 2, MaximumSpread: 1.5, MinimumPeriod: time.Second}, checkpoints, now)
 	wetPlantTests := repair.NewTestService(mutes, ids, now, 30*time.Second)
+	windows := window.NewService(topologies, permits, receipts, ids, now)
+	windows.RegisterStation(station)
 
 	return &api.Services{
 		Clock: clock, IDs: ids, Journal: journal,
@@ -123,6 +126,7 @@ func buildServices(cfg config) (*api.Services, error) {
 		WetPlantTests: wetPlantTests, Ramps: ramps, Assets: assets,
 		RepeaterHealth: healthProjector, Actuator: actuator,
 		Tests: make(map[string]*repair.TestSession), Incidents: make(map[string]*incident.Incident),
+		Windows: windows,
 	}, nil
 }
 

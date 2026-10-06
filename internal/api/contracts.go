@@ -77,3 +77,26 @@ type IncidentRequest struct {
 	DistanceKM   float64 `json:"distance_km"`
 	RequiresPeer bool    `json:"requires_peer"`
 }
+
+type WindowScheduleRequest struct {
+	SpanID    string    `json:"span_id"`
+	StationID string    `json:"station_id"`
+	CircuitID string    `json:"circuit_id"`
+	PermitID  string    `json:"permit_id"`
+	StartsAt  time.Time `json:"starts_at"`
+	EndsAt    time.Time `json:"ends_at"`
+	Purpose   string    `json:"purpose"`
+}
+
+type WindowRescheduleRequest struct {
+	StartsAt time.Time `json:"starts_at"`
+	EndsAt   time.Time `json:"ends_at"`
+}
+
+type WindowAbandonRequest struct {
+	Reason string `json:"reason"`
+}
+
+type WindowTraceRequest struct {
+	TraceID string `json:"trace_id"`
+}

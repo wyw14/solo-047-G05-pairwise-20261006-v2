@@ -46,6 +46,18 @@ func NewServer(services *Services) *Server {
 		r.Post("/spans/{id}/wet-plant-tests", server.startWetPlantTest)
 		r.Post("/wet-plant-tests/{id}", server.finishWetPlantTest)
 		r.Post("/spans/{id}/incidents/{incidentID}", server.updateIncident)
+		r.Route("/maintenance-windows", func(r chi.Router) {
+			r.Post("/", server.scheduleWindow)
+			r.Get("/", server.listWindows)
+			r.Get("/overdue", server.listOverdueWindows)
+			r.Get("/{id}", server.getWindow)
+			r.Post("/{id}/activate", server.activateWindow)
+			r.Post("/{id}/reschedule", server.rescheduleWindow)
+			r.Post("/{id}/complete", server.completeWindow)
+			r.Post("/{id}/abandon", server.abandonWindow)
+			r.Post("/{id}/otdr-scans", server.runWindowScan)
+			r.Put("/{id}/otdr-trace", server.attachWindowTrace)
+		})
 	})
 	server.router = router
 	return server

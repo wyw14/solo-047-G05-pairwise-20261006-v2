@@ -22,11 +22,12 @@ import (
 	"github.com/wyw14/cry-103/internal/switchover"
 	"github.com/wyw14/cry-103/internal/telemetry"
 	"github.com/wyw14/cry-103/internal/topology"
+	"github.com/wyw14/cry-103/internal/window"
 )
 
 func testServer(t *testing.T) *Server {
 	t.Helper()
-	clock := fixedClock{now: time.Date(2026, 8, 24, 3, 0, 0, 0, time.UTC)}
+	clock := newMutableClock(time.Date(2026, 8, 24, 3, 0, 0, 0, time.UTC))
 	ids := platform.UUIDGenerator{}
 	registry := topology.NewRegistry()
 	if _, err := registry.Register("S3", topology.PathPrimary, clock.Now()); err != nil {
@@ -59,26 +60,35 @@ func testServer(t *testing.T) *Server {
 	repository := telemetry.NewRepository()
 	acceptance := repair.NewAcceptanceService(switchover.NewRestorer(drainer, activator, registry, ids, clock.Now), clock.Now)
 	acceptance.Register("S3", target, path)
+	station, err := landing.NewStation("east", "East Landing", clock.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	windows := window.NewService(registry, permitService, receipts, ids, clock.Now)
+	windows.RegisterStation(station)
 	services := &Services{
 		Clock: clock, IDs: ids, Journal: store.NewJournal(filepath.Join(t.TempDir(), "events.jsonl")),
 		Spans: map[string]*span.Span{"S3": target}, Routes: map[string]*route.Route{"R-S3": path},
 		Repeaters: map[string]*repeater.Repeater{"R07": repeaterAsset}, Topology: registry,
 		OTDR:        otdr.NewSessionService(registry, landing.NewScanner(registry, 0), ids, clock.Now),
 		Switchovers: switchover.NewSessionService(drainer, activator, ids, clock.Now, time.Second),
-		Permits:     permitService, Receipts: receipts, Acceptance: acceptance,
+		Permits:     permitService, Receipts: receipts, Acceptance: acceptance, Station: station,
 		Telemetry: telemetry.NewIngestor(repository, clock.Now, projector), TelemetryRepository: repository,
-		Admission: incident.NewAdmissionService(telemetry.NewMuteManager(clock.Now)),
+		Admission: incident.NewAdmissionService(telemetry.NewMuteManager(clock.Now)), Windows: windows,
 	}
 	return NewServer(services)
 }
 
-type fixedClock struct {
+type mutableClock struct {
 	now time.Time
 }
 
-func (c fixedClock) Now() time.Time {
-	return c.now
-}
+func newMutableClock(now time.Time) *mutableClock { return &mutableClock{now: now} }
+
+func (c *mutableClock) Now() time.Time { return c.now }
+
+// advance moves the test clock forward so timestamps become distinguishable.
+func (c *mutableClock) advance(d time.Duration) { c.now = c.now.Add(d) }
 
 func TestHealthAndScanHTTPFlow(t *testing.T) {
 	server := testServer(t)
