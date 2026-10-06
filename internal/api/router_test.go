@@ -22,6 +22,7 @@ import (
 	"github.com/wyw14/cry-103/internal/switchover"
 	"github.com/wyw14/cry-103/internal/telemetry"
 	"github.com/wyw14/cry-103/internal/topology"
+	"github.com/wyw14/cry-103/internal/window"
 )
 
 func testServer(t *testing.T) *Server {
@@ -56,6 +57,12 @@ func testServer(t *testing.T) *Server {
 	lifecycle := incident.NewRepeaterLifecycle()
 	projector := repeater.NewHealthProjector(lifecycle, 85)
 	projector.Register(repeaterAsset)
+	station, err := landing.NewStation("east", "East Landing", clock.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	windows := window.NewWindowService(registry, permitService, ids, clock.Now)
+	windows.RegisterStation(station)
 	repository := telemetry.NewRepository()
 	acceptance := repair.NewAcceptanceService(switchover.NewRestorer(drainer, activator, registry, ids, clock.Now), clock.Now)
 	acceptance.Register("S3", target, path)
@@ -68,6 +75,7 @@ func testServer(t *testing.T) *Server {
 		Permits:     permitService, Receipts: receipts, Acceptance: acceptance,
 		Telemetry: telemetry.NewIngestor(repository, clock.Now, projector), TelemetryRepository: repository,
 		Admission: incident.NewAdmissionService(telemetry.NewMuteManager(clock.Now)),
+		Windows:   windows,
 	}
 	return NewServer(services)
 }

@@ -46,6 +46,13 @@ func NewServer(services *Services) *Server {
 		r.Post("/spans/{id}/wet-plant-tests", server.startWetPlantTest)
 		r.Post("/wet-plant-tests/{id}", server.finishWetPlantTest)
 		r.Post("/spans/{id}/incidents/{incidentID}", server.updateIncident)
+		r.Post("/maintenance-windows", server.scheduleWindow)
+		r.Post("/maintenance-windows/preflight", server.preflightWindow)
+		r.Get("/maintenance-windows", server.listWindows)
+		r.Get("/maintenance-windows/{id}", server.getWindow)
+		r.Post("/maintenance-windows/{id}/start", server.startWindow)
+		r.Post("/maintenance-windows/{id}/complete", server.completeWindow)
+		r.Post("/maintenance-windows/{id}/abandon", server.abandonWindow)
 	})
 	server.router = router
 	return server

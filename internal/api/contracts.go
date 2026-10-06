@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/wyw14/cry-103/internal/otdr"
+	"github.com/wyw14/cry-103/internal/window"
 )
 
 type ErrorResponse struct {
@@ -76,4 +77,30 @@ type IncidentRequest struct {
 	TraceID      string  `json:"trace_id"`
 	DistanceKM   float64 `json:"distance_km"`
 	RequiresPeer bool    `json:"requires_peer"`
+}
+
+type WindowScheduleRequest struct {
+	SpanID    string    `json:"span_id"`
+	StationID string    `json:"station_id"`
+	CircuitID string    `json:"circuit_id"`
+	PermitID  string    `json:"permit_id"`
+	StartAt   time.Time `json:"start_at"`
+	EndAt     time.Time `json:"end_at"`
+	Operator  string    `json:"operator"`
+	Notes     string    `json:"notes"`
+}
+
+type WindowReceiptRequest struct {
+	ID          string `json:"id"`
+	OTDRTraceID string `json:"otdr_trace_id"`
+	Operator    string `json:"operator"`
+	Notes       string `json:"notes"`
+}
+
+type WindowAbandonRequest struct {
+	Reason string `json:"reason"`
+}
+
+type WindowBlockersResponse struct {
+	Blockers []window.Blocker `json:"blockers"`
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/wyw14/cry-103/internal/switchover"
 	"github.com/wyw14/cry-103/internal/telemetry"
 	"github.com/wyw14/cry-103/internal/topology"
+	"github.com/wyw14/cry-103/internal/window"
 )
 
 type Services struct {
@@ -48,6 +49,7 @@ type Services struct {
 	Actuator            *feed.Actuator
 	Tests               map[string]*repair.TestSession
 	Incidents           map[string]*incident.Incident
+	Windows             *window.WindowService
 	mu                  sync.RWMutex
 }
 
